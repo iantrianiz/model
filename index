@@ -1,0 +1,235 @@
+<?php
+
+class Category {
+    /**
+     * Represents a category of interior design products (e.g., Furniture, Lighting, etc.)
+     */
+    private $name;
+    private $description;
+
+    public function __construct($name, $description) {
+        $this->name = $name;
+        $this->description = $description;
+    }
+
+    public function getName() {
+        return $this->name;
+    }
+
+    public function getDescription() {
+        return $this->description;
+    }
+
+    public function __toString() {
+        return $this->name . ": " . $this->description;
+    }
+}
+
+class Product {
+    /**
+     * Represents a product in the interior design system.
+     */
+    private $name;
+    private $category;
+    private $price;
+    private $sku;
+    private $quantity;
+    private $description;
+
+    public function __construct($name, Category $category, $price, $sku, $quantity, $description) {
+        $this->name = $name;
+        $this->category = $category;
+        $this->price = $price;
+        $this->sku = $sku;
+        $this->quantity = $quantity;
+        $this->description = $description;
+    }
+
+    public function getProductDetails() {
+        return [
+            'Name' => $this->name,
+            'Category' => (string) $this->category,
+            'Price' => '$' . number_format($this->price, 2),
+            'SKU' => $this->sku,
+            'Quantity Available' => $this->quantity,
+            'Description' => $this->description
+        ];
+    }
+
+    public function updateQuantity($quantity) {
+        if ($quantity >= 0) {
+            $this->quantity = $quantity;
+        } else {
+            throw new Exception("Quantity cannot be negative.");
+        }
+    }
+
+    public function __toString() {
+        return $this->name . ' - ' . $this->sku;
+    }
+}
+
+class Customer {
+    /**
+     * Represents a customer in the interior design website.
+     */
+    private $firstName;
+    private $lastName;
+    private $email;
+    private $address;
+
+    public function __construct($firstName, $lastName, $email, $address) {
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
+        $this->email = $email;
+        $this->address = $address;
+    }
+
+    public function getFullName() {
+        return $this->firstName . ' ' . $this->lastName;
+    }
+
+    public function getEmail() {
+        return $this->email;
+    }
+
+    public function getAddress() {
+        return $this->address;
+    }
+
+    public function __toString() {
+        return $this->getFullName() . ' (' . $this->email . ')';
+    }
+}
+
+class Order {
+    /**
+     * Represents an order placed by a customer for products.
+     */
+    private $customer;
+    private $products = [];
+    private $orderDate;
+    private $totalPrice;
+
+    public function __construct(Customer $customer) {
+        $this->customer = $customer;
+        $this->orderDate = new DateTime();
+        $this->totalPrice = 0;
+    }
+
+    public function addProduct(Product $product, $quantity) {
+        if ($product->getQuantity() >= $quantity) {
+            $this->products[] = ['product' => $product, 'quantity' => $quantity];
+            $this->totalPrice += $product->getProductDetails()['Price'] * $quantity;
+            $product->updateQuantity($product->getQuantity() - $quantity);
+        } else {
+            throw new Exception("Not enough stock for product: " . $product->getName());
+        }
+    }
+
+    public function getOrderDetails() {
+        $productDetails = array_map(function($item) {
+            return [
+                'Product' => (string) $item['product'],
+                'Quantity' => $item['quantity'],
+                'Total Price' => '$' . number_format($item['product']->getProductDetails()['Price'] * $item['quantity'], 2)
+            ];
+        }, $this->products);
+
+        return [
+            'Customer' => (string) $this->customer,
+            'Order Date' => $this->orderDate->format('F d, Y'),
+            'Products' => $productDetails,
+            'Total Price' => '$' . number_format($this->totalPrice, 2)
+        ];
+    }
+
+    public function __toString() {
+        return "Order for " . $this->customer->getFullName() . " on " . $this->orderDate->format('F d, Y');
+    }
+}
+
+class Payment {
+    /**
+     * Represents a payment for an order.
+     */
+    private $order;
+    private $paymentMethod;
+    private $paymentDate;
+    private $paymentAmount;
+
+    public function __construct(Order $order, $paymentMethod) {
+        $this->order = $order;
+        $this->paymentMethod = $paymentMethod;
+        $this->paymentDate = new DateTime();
+        $this->paymentAmount = $order->getOrderDetails()['Total Price'];
+    }
+
+    public function getPaymentDetails() {
+        return [
+            'Payment Method' => $this->paymentMethod,
+            'Payment Date' => $this->paymentDate->format('F d, Y'),
+            'Amount Paid' => $this->paymentAmount
+        ];
+    }
+
+    public function __toString() {
+        return "Payment for " . $this->order . " using " . $this->paymentMethod . " on " . $this->paymentDate->format('F d, Y');
+    }
+}
+
+class InteriorDesignStore {
+    /**
+     * Represents the interior design store system.
+     */
+    private $products = [];
+    private $categories = [];
+    private $customers = [];
+    private $orders = [];
+    private $payments = [];
+
+    public function addCategory(Category $category) {
+        $this->categories[] = $category;
+    }
+
+    public function addProduct(Product $product) {
+        $this->products[] = $product;
+    }
+
+    public function addCustomer(Customer $customer) {
+        $this->customers[] = $customer;
+    }
+
+    public function addOrder(Order $order) {
+        $this->orders[] = $order;
+    }
+
+    public function addPayment(Payment $payment) {
+        $this->payments[] = $payment;
+    }
+
+    public function searchProductsByCategory($categoryName) {
+        return array_filter($this->products, function($product) use ($categoryName) {
+            return stripos((string) $product->category, $categoryName) !== false;
+        });
+    }
+
+    public function listProducts() {
+        return array_map(function($product) {
+            return $product->getProductDetails();
+        }, $this->products);
+    }
+
+    public function listOrders() {
+        return array_map(function($order) {
+            return $order->getOrderDetails();
+        }, $this->orders);
+    }
+
+    public function listPayments() {
+        return array_map(function($payment) {
+            return $payment->getPaymentDetails();
+        }, $this->payments);
+    }
+}
+?>
