@@ -1,0 +1,58 @@
+<?php
+
+require_once 'index.php';
+
+// Creating categories
+$category1 = new Category("Furniture", "Sofas, Chairs, Tables, and more.");
+$category2 = new Category("Lighting", "Chandeliers, Table Lamps, Floor Lamps.");
+
+// Creating products
+$product1 = new Product("Modern Sofa", $category1, 1200, "SOF123", 10, "A comfortable and modern sofa.");
+$product2 = new Product("Chandelier Light", $category2, 350, "LAMP456", 15, "Elegant chandelier light for living rooms.");
+
+// Creating customers
+$customer1 = new Customer("Alice", "Green", "alice.green@example.com", "123 Maple Street, Springfield");
+$customer2 = new Customer("Bob", "Brown", "bob.brown@example.com", "456 Pine Avenue, Springfield");
+
+// Creating orders
+$order1 = new Order($customer1);
+$order1->addProduct($product1, 1);
+$order1->addProduct($product2, 2);
+
+// Creating payments
+$payment1 = new Payment($order1, "Credit Card");
+
+// Creating the interior design store system
+$store = new InteriorDesignStore();
+
+// Adding categories to the store
+$store->addCategory($category1);
+$store->addCategory($category2);
+
+// Adding products to the store
+$store->addProduct($product1);
+$store->addProduct($product2);
+
+// Adding customers to the store
+$store->addCustomer($customer1);
+$store->addCustomer($customer2);
+
+// Adding orders to the store
+$store->addOrder($order1);
+
+// Adding payments to the store
+$store->addPayment($payment1);
+
+// Listing all products
+echo "All Products:\n";
+print_r($store->listProducts());
+
+// Listing all orders
+echo "All Orders:\n";
+print_r($store->listOrders());
+
+// Listing all payments
+echo "All Payments:\n";
+print_r($store->listPayments());
+
+?>
